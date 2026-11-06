@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Bauchlog</string>
+    <string name="stool_log_title">Stuhlprotokoll</string>
+    <string name="stool_log_description">Einträge nach der Bristol-Skala werden hier erfasst.</string>
+    <string name="food_diary_title">Ernährungstagebuch</string>
+    <string name="food_diary_description">Mahlzeiten und Notizen werden hier festgehalten.</string>
+    <string name="project_scaffold">Projektgerüst: Die Eingabemasken folgen in einem späteren Schritt.</string>
+</resources>

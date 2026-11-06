@@ -1,0 +1,38 @@
+schema: spec-driven
+
+context: |
+  Language: English
+  All OpenSpec artifacts must be written in English, regardless of the conversation language.
+  Preserve explicitly specified user-facing UI labels in their intended language.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Diary is an offline-first Android and iOS app for a stool log and food diary.
+  Kotlin Multiplatform and Compose Multiplatform share application code and UI.
+  Personal entries stay on the device; the first release requires no account or backend.
+  Keep domain rules independent of Room and keep Room behind repository interfaces.
+  Photo-based food recognition and local statistical pattern analysis are future work;
+  never simulate either capability. Recognition suggestions require user review, and
+  analysis must not make diagnostic or causal claims.
+githubCopilot:
+  cloudAgent: false
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

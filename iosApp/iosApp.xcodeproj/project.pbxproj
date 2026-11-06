@@ -1,0 +1,210 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DA0000000000000000000001 /* GutLogIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0000000000000000000002 /* GutLogIOSApp.swift */; };
+		DA0000000000000000000003 /* GutLogShared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA0000000000000000000004 /* GutLogShared.framework */; };
+		DA0000000000000000000021 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DA0000000000000000000022 /* InfoPlist.strings */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		DA0000000000000000000002 /* GutLogIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GutLogIOSApp.swift; sourceTree = "<group>"; };
+		DA0000000000000000000004 /* GutLogShared.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GutLogShared.framework; path = GutLogShared.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA0000000000000000000005 /* GutLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GutLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA0000000000000000000023 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		DA0000000000000000000024 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DA0000000000000000000006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (DA0000000000000000000003 /* GutLogShared.framework in Frameworks */,);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DA0000000000000000000007 = {
+			isa = PBXGroup;
+			children = (DA0000000000000000000008 /* iosApp */, DA0000000000000000000009 /* Products */,);
+			sourceTree = "<group>";
+		};
+		DA0000000000000000000008 /* iosApp */ = {
+			isa = PBXGroup;
+			children = (DA0000000000000000000002 /* GutLogIOSApp.swift */, DA0000000000000000000022 /* InfoPlist.strings */,);
+			path = iosApp;
+			sourceTree = "<group>";
+		};
+		DA0000000000000000000009 /* Products */ = {
+			isa = PBXGroup;
+			children = (DA0000000000000000000005 /* GutLog.app */,);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DA0000000000000000000022 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DA0000000000000000000023 /* en */,
+				DA0000000000000000000024 /* de */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DA0000000000000000000010 /* GutLogIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DA0000000000000000000016 /* Build configuration list for PBXNativeTarget "GutLogIOS" */;
+			buildPhases = (
+				DA0000000000000000000011 /* Build Kotlin framework */,
+				DA0000000000000000000012 /* Sources */,
+				DA0000000000000000000006 /* Frameworks */,
+				DA0000000000000000000013 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = GutLogIOS;
+			productName = GutLogIOS;
+			productReference = DA0000000000000000000005 /* GutLog.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DA0000000000000000000014 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {DA0000000000000000000010 = {CreatedOnToolsVersion = 16.0; }; };
+			};
+			buildConfigurationList = DA0000000000000000000015 /* Build configuration list for PBXProject "GutLog" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, de, Base,);
+			mainGroup = DA0000000000000000000007;
+			productRefGroup = DA0000000000000000000009 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (DA0000000000000000000010 /* GutLogIOS */,);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DA0000000000000000000013 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (DA0000000000000000000021 /* InfoPlist.strings in Resources */,);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		DA0000000000000000000011 /* Build Kotlin framework */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			inputFileListPaths = ();
+			inputPaths = ();
+			name = "Build Kotlin framework";
+			outputFileListPaths = ();
+			outputPaths = ("$(BUILT_PRODUCTS_DIR)/GutLogShared.framework",);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\ncd \"$SRCROOT/..\"\ncase \"$SDK_NAME\" in\n  iphonesimulator*) GRADLE_TARGET=\"IosSimulatorArm64\"; KOTLIN_TARGET=\"iosSimulatorArm64\" ;;\n  iphoneos*) GRADLE_TARGET=\"IosArm64\"; KOTLIN_TARGET=\"iosArm64\" ;;\n  *) echo \"Unsupported iOS SDK: $SDK_NAME\" >&2; exit 1 ;;\nesac\nif [ \"$CONFIGURATION\" = \"Debug\" ]; then FRAMEWORK_CONFIGURATION=\"debugFramework\"; else FRAMEWORK_CONFIGURATION=\"releaseFramework\"; fi\nsh ./gradlew \":shared:link${CONFIGURATION}${GRADLE_TARGET}Framework\"\nmkdir -p \"$BUILT_PRODUCTS_DIR\"\nditto \"shared/build/bin/${KOTLIN_TARGET}/${FRAMEWORK_CONFIGURATION}/GutLogShared.framework\" \"$BUILT_PRODUCTS_DIR/GutLogShared.framework\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DA0000000000000000000012 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (DA0000000000000000000001 /* GutLogIOSApp.swift in Sources */,);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		DA0000000000000000000017 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+			};
+			name = Debug;
+		};
+		DA0000000000000000000018 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+			};
+			name = Release;
+		};
+		DA0000000000000000000019 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited) $(BUILT_PRODUCTS_DIR)";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = GutLog;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = "$(inherited) -framework GutLogShared";
+				PRODUCT_BUNDLE_IDENTIFIER = de.gutlog.app.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DA0000000000000000000020 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited) $(BUILT_PRODUCTS_DIR)";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = GutLog;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = "$(inherited) -framework GutLogShared";
+				PRODUCT_BUNDLE_IDENTIFIER = de.gutlog.app.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DA0000000000000000000015 /* Build configuration list for PBXProject "GutLog" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (DA0000000000000000000017 /* Debug */, DA0000000000000000000018 /* Release */,);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DA0000000000000000000016 /* Build configuration list for PBXNativeTarget "GutLogIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (DA0000000000000000000019 /* Debug */, DA0000000000000000000020 /* Release */,);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DA0000000000000000000014 /* Project object */;
+}

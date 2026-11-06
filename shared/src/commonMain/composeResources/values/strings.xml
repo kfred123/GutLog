@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">GutLog</string>
+    <string name="stool_log_title">Stool log</string>
+    <string name="stool_log_description">Log entries using the Bristol Stool Scale.</string>
+    <string name="food_diary_title">Food diary</string>
+    <string name="food_diary_description">Record meals and notes here.</string>
+    <string name="project_scaffold">Project scaffold: entry forms will be added in a later step.</string>
+</resources>
