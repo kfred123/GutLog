@@ -2,23 +2,52 @@
 
 ## Purpose
 
-Defines local recording and display of bowel movement entries with visual Bristol type selection and blood and urgency flags on Android and iOS.
+Defines local recording and display of bowel movement entries with visual Bristol type selection and blood and urgency flags. This change targets Android; iOS development and verification are out of scope until re-enabled by the user.
 
 ## ADDED Requirements
 
-### Requirement: Open bowel movement entry from the bottom of the screen
+### Requirement: Open entry actions from the bottom of the screen
 
-The application MUST provide a button with a toilet icon at the bottom of the log screen that opens a new bowel movement entry form. The button MUST remain accessible regardless of scroll position and have the accessible name "Stuhlgang hinzufügen".
+The application MUST provide an accessible plus button at the bottom right of the log screen that opens a dropdown or popover. It MUST remain accessible regardless of scroll position. The menu MUST show "Stuhlgang eintragen", "Essen eintragen", and "Schmerzen eintragen" in German. The stool action MUST open a new bowel movement form; the meal and pain actions MUST be disabled and visibly marked "demnächst". User-facing and accessibility text MUST also be available in English.
 
 #### Scenario: Open the entry form
 
-- **WHEN** the user activates the button with the toilet icon
+- **WHEN** the user opens the plus menu and selects the stool action
 - **THEN** a new entry form opens using the Bristol default defined below and the "Blut" and "Dringend" checkboxes unchecked
+
+#### Scenario: Show future actions without implying availability
+
+- **WHEN** the user opens the plus menu
+- **THEN** meal and pain actions are visible, disabled, and marked as coming soon
+
+#### Scenario: Dismiss the menu
+
+- **WHEN** the user dismisses the menu without selecting the stool action
+- **THEN** no form opens and no entry is created
 
 #### Scenario: Display a long log
 
 - **WHEN** the user scrolls through a long stool log
 - **THEN** the add button remains usable at the bottom of the screen without obscuring the last entry or system controls
+
+### Requirement: Select an event date and time
+
+The form MUST allow selecting a local date and time, initially set to the current local date and time. It MUST accept valid current or past instants and MUST NOT save future instants. The application MUST store the selected instant as a UTC epoch timestamp and MUST show a validation message for future, invalid, or ambiguous local times instead of silently changing the selection.
+
+#### Scenario: Record a past event
+
+- **WHEN** the user selects a valid past local date and time and saves the form
+- **THEN** the saved timestamp represents that selected instant
+
+#### Scenario: Reject a future event
+
+- **WHEN** the selected instant is in the future at the time of saving
+- **THEN** the entry is not saved and an understandable validation message is shown
+
+#### Scenario: Handle a clock change
+
+- **WHEN** the selected local date and time does not identify a unique instant because of a daylight-saving transition
+- **THEN** the application requests a valid unambiguous selection and does not silently alter it
 
 ### Requirement: Select a Bristol type visually and unambiguously
 
@@ -53,6 +82,16 @@ A new entry MUST preselect the Bristol type of the last successfully saved stool
 - **WHEN** the last successfully saved entry has Bristol type 6 and the app is restarted before opening a new entry
 - **THEN** type 6 is preselected
 
+#### Scenario: Save an older event last
+
+- **WHEN** the user saves a backdated type 5 entry after a chronologically newer type 3 entry and restarts the app
+- **THEN** the next new entry preselects type 5 even though the type 3 entry remains first in the chronological log
+
+#### Scenario: Upgrade data without recorded save order
+
+- **WHEN** an existing dataset without save-order metadata is upgraded
+- **THEN** the default is initialized from its latest event timestamp, breaking timestamp ties deterministically by ID, or remains unset if no stool entry exists
+
 #### Scenario: First entry
 
 - **WHEN** no stool entry has previously been saved
@@ -79,7 +118,7 @@ The form MUST provide checkboxes with the visible labels "Blut" and "Dringend". 
 
 ### Requirement: Save entries only after confirmation and exclusively locally
 
-The application MUST persist a valid entry locally only through "Speichern", assigning a stable ID and the current UTC timestamp. It MUST prevent a second save while saving is in progress. After success, the form MUST close and the log MUST display the entry. Cancelling or navigating back before saving MUST discard the draft without persistence.
+The application MUST persist a valid entry locally only through "Speichern", assigning a stable ID and the UTC timestamp corresponding to the selected date and time. The entry and the last-saved Bristol default MUST be updated atomically. It MUST prevent a second save while saving is in progress. After success, the form MUST close and the log MUST display the entry. Cancelling or navigating back before saving MUST discard the draft without persistence.
 
 #### Scenario: Save offline
 
@@ -109,6 +148,25 @@ The application MUST display locally saved bowel movement entries in descending 
 
 - **WHEN** multiple entries with different timestamps have been saved and the app is restarted
 - **THEN** the saved values appear in full, in descending event time order, without fabricated entries
+
+### Requirement: Visualize Bristol shape and urgency in the saved stool log
+
+Each saved entry MUST show the schematic Bristol shape corresponding to its type. When blood is enabled, the shape MUST be red, while the blood label remains visible so the meaning is not conveyed by color alone. When urgency is enabled, the entry MUST show an additional urgency pictogram alongside its text label. Entries without urgency MUST NOT show the urgency pictogram. The shape description MUST be accessible.
+
+#### Scenario: Visualize the saved stool type and flags
+
+- **WHEN** an entry with Bristol type 4 is displayed with blood and urgency enabled
+- **THEN** its type-4 stool shape is shown in red, its blood and urgency labels are shown, and an additional urgency pictogram is visible
+
+#### Scenario: Do not show disabled flag pictograms
+
+- **WHEN** an entry has blood and urgency disabled
+- **THEN** its stool shape uses the normal color and no urgency pictogram is shown
+
+#### Scenario: Match drawing to Bristol type
+
+- **WHEN** an entry with Bristol type 2 appears in the log
+- **THEN** the log shows the schematic drawing for type 2 and provides its type in the accessible description
 
 #### Scenario: Empty log
 
