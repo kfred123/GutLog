@@ -11,8 +11,10 @@ class RoomStoolEntryRepository(
     override fun observeAll(): Flow<List<StoolEntry>> =
         dao.observeAll().map { entries -> entries.map(StoolEntryEntity::toDomain) }
 
+    override suspend fun lastSavedBristolType(): Int? = dao.lastSavedBristolType()
+
     override suspend fun save(entry: StoolEntry) {
-        dao.upsert(StoolEntryEntity.fromDomain(entry))
+        dao.saveWithDefault(StoolEntryEntity.fromDomain(entry))
     }
 
     override suspend fun delete(id: String) {

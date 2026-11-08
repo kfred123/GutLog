@@ -6,8 +6,8 @@ import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 
 @Database(
-    entities = [StoolEntryEntity::class, MealEntryEntity::class],
-    version = 1,
+    entities = [StoolEntryEntity::class, MealEntryEntity::class, StoolDefaultEntity::class],
+    version = 2,
 )
 @ConstructedBy(DiaryDatabaseConstructor::class)
 abstract class DiaryDatabase : RoomDatabase() {

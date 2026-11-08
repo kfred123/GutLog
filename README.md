@@ -32,6 +32,35 @@ vermeidet Apple-native Test-Tasks, die macOS benötigen:
 .\gradlew.bat :shared:testAndroidHostTest
 ```
 
+Die Room-Migrations- und Persistenztests benötigen einen laufenden Android-
+Emulator oder ein verbundenes Gerät:
+
+```powershell
+.\gradlew.bat :androidApp:connectedDebugAndroidTest
+```
+
+Die lokale Datenbank verwendet Schema-Version 2. Beim Upgrade von Version 1
+werden vorhandene Stuhl- und Mahlzeitendaten ohne Zurücksetzen übernommen;
+neue Blut- und Dringlichkeitsmerkmale sind für alte Einträge nicht markiert.
+Ein Downgrade auf eine ältere App-Version nach dem Upgrade wird nicht
+automatisch unterstützt.
+
+## Stuhlgang erfassen
+
+Über den Plus-Button unten rechts öffnet sich ein Menü für Stuhlgang, Essen und
+Schmerzen. Zunächst ist nur „Stuhlgang eintragen“ verfügbar; die anderen
+Optionen sind als „demnächst“ gekennzeichnet. Das Formular bietet Datum und
+Uhrzeit für aktuelle oder zurückliegende Einträge, sieben schematische
+Bristol-Symbole sowie unabhängige Merkmale für Blut und Dringlichkeit.
+Zukünftige oder durch eine Zeitumstellung nicht eindeutig bestimmbare
+Zeitpunkte werden nicht gespeichert. Der Bristol-Typ des zuletzt erfolgreich
+gespeicherten Eintrags wird beim nächsten Eintrag vorausgewählt, auch wenn
+dessen Ereigniszeit älter ist. Ohne gespeicherten Stuhlgang bleibt die Auswahl
+leer. Abbrechen oder ein fehlgeschlagenes Speichern ändert diese Vorgabe nicht.
+
+Die Einträge dienen der persönlichen Dokumentation. Die App erstellt keine
+Diagnosen, Erkennungsvorschläge oder statistischen Analysen.
+
 Das APK liegt anschließend unter
 `androidApp/build/outputs/apk/debug/androidApp-debug.apk`.
 

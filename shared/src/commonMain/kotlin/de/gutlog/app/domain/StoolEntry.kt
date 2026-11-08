@@ -5,6 +5,8 @@ data class StoolEntry(
     val occurredAtEpochMillis: Long,
     val bristolType: Int,
     val note: String? = null,
+    val hasBlood: Boolean = false,
+    val isUrgent: Boolean = false,
 ) {
     init {
         require(id.isNotBlank()) { "An entry ID is required." }
