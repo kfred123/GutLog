@@ -39,24 +39,46 @@ Emulator oder ein verbundenes Gerät:
 .\gradlew.bat :androidApp:connectedDebugAndroidTest
 ```
 
-Die lokale Datenbank verwendet Schema-Version 2. Beim Upgrade von Version 1
-werden vorhandene Stuhl- und Mahlzeitendaten ohne Zurücksetzen übernommen;
-neue Blut- und Dringlichkeitsmerkmale sind für alte Einträge nicht markiert.
+Die lokale Datenbank verwendet Schema-Version 3. Beim Upgrade von Version 1
+oder 2 werden vorhandene Stuhl- und Mahlzeitendaten ohne Zurücksetzen
+übernommen; neue Blut- und Dringlichkeitsmerkmale sind für alte Einträge nicht
+markiert. Mahlzeiten aus Version 2 behalten Zeit, Beschreibung und Notiz; eine
+damals nicht gespeicherte Portionsgröße wird als „mittel“ angezeigt. Der
+Food-Katalog und die Lebensmittel einer Mahlzeit werden in zusätzlichen Tabellen
+gespeichert.
 Ein Downgrade auf eine ältere App-Version nach dem Upgrade wird nicht
 automatisch unterstützt.
 
 ## Stuhlgang erfassen
 
 Über den Plus-Button unten rechts öffnet sich ein Menü für Stuhlgang, Essen und
-Schmerzen. Zunächst ist nur „Stuhlgang eintragen“ verfügbar; die anderen
-Optionen sind als „demnächst“ gekennzeichnet. Das Formular bietet Datum und
-Uhrzeit für aktuelle oder zurückliegende Einträge, sieben schematische
-Bristol-Symbole sowie unabhängige Merkmale für Blut und Dringlichkeit.
+Schmerzen. Stuhlgang und Essen können eingetragen werden; Schmerzen ist als
+„demnächst“ gekennzeichnet. Das Stuhl-Formular bietet Datum und Uhrzeit für
+aktuelle oder zurückliegende Einträge, sieben schematische Bristol-Symbole sowie
+unabhängige Merkmale für Blut und Dringlichkeit.
 Zukünftige oder durch eine Zeitumstellung nicht eindeutig bestimmbare
 Zeitpunkte werden nicht gespeichert. Der Bristol-Typ des zuletzt erfolgreich
 gespeicherten Eintrags wird beim nächsten Eintrag vorausgewählt, auch wenn
 dessen Ereigniszeit älter ist. Ohne gespeicherten Stuhlgang bleibt die Auswahl
 leer. Abbrechen oder ein fehlgeschlagenes Speichern ändert diese Vorgabe nicht.
+
+## Mahlzeiten erfassen
+
+Im Menü „Essen eintragen“ kann eine Mahlzeit mit Datum und Uhrzeit erstellt
+werden. Die Lebensmittelsuche funktioniert offline und findet den eingebauten
+Katalog auf Deutsch und Englisch unabhängig von der gewählten App-Sprache. Er
+enthält häufige Gemüse, Obst, Fleisch und Hülsenfrüchte. Nicht gefundene
+Lebensmittel können als Freitext hinzugefügt und nach erfolgreichem Speichern
+lokal für spätere Suchen übernommen werden; beim Abbrechen bleibt der Katalog
+unverändert.
+
+Für die Mahlzeit wird eine Portionsgröße von klein, mittel oder groß gewählt.
+Lebensmittel übernehmen diese Vorgabe, sofern nicht eine abweichende Größe
+direkt am Lebensmittel gewählt wird. Wird die Mahlzeit-Portion geändert, bleiben
+solche Einzel-Overrides erhalten. Gespeicherte Mahlzeiten erscheinen mit ihrer
+lokalen Uhrzeit und den tatsächlich geltenden Portionsgrößen. Eine
+Nährwertberechnung, Fotoerkennung oder Analyse von Zusammenhängen ist nicht
+enthalten.
 
 Die Einträge dienen der persönlichen Dokumentation. Die App erstellt keine
 Diagnosen, Erkennungsvorschläge oder statistischen Analysen.

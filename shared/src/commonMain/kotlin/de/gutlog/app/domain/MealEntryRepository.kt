@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.Flow
 interface MealEntryRepository {
     fun observeAll(): Flow<List<MealEntry>>
 
+    suspend fun searchFoods(query: String): List<FoodCatalogItem> =
+        BuiltInFoodCatalog.search(query)
+
     suspend fun save(entry: MealEntry)
 
     suspend fun delete(id: String)
