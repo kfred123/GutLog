@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.gutlog.app.domain.StoolEntryRepository
+import de.gutlog.app.domain.MealEntryRepository
 import de.gutlog.app.localization.AppLanguage
 import de.gutlog.app.localization.LocalAppLocale
 import de.gutlog.app.localization.rememberLanguagePreferenceStore
@@ -40,7 +41,10 @@ import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 @Composable
-fun DiaryApp(repositoryFactory: () -> StoolEntryRepository) {
+fun DiaryApp(
+    repositoryFactory: () -> StoolEntryRepository,
+    mealRepositoryFactory: (() -> MealEntryRepository)? = null,
+) {
     val preferences = rememberLanguagePreferenceStore()
     val currentDeviceLanguageTag = LocalAppLocale.current
     val deviceLanguageTag = remember { currentDeviceLanguageTag }
@@ -81,9 +85,28 @@ fun DiaryApp(repositoryFactory: () -> StoolEntryRepository) {
                         newId = { Uuid.random().toString() },
                     )
                 }
+                val mealRepository = remember(mealRepositoryFactory) {
+                    mealRepositoryFactory?.invoke()
+                }
+                val mealState = remember(mealRepository) {
+                    mealRepository?.let { meals ->
+                        MealLogState(
+                            meals,
+                            scope,
+                            now = { Clock.System.now().toEpochMilliseconds() },
+                            newId = { Uuid.random().toString() },
+                        )
+                    }
+                }
                 val draft by state.draft.collectAsState()
-                SharedBackHandler(enabled = draft != null, onBack = state::cancelDraft)
-                StoolLogScreen(state, selectedLanguage == AppLanguage.German)
+                val mealDraft = mealState?.draft?.collectAsState()
+                SharedBackHandler(
+                    enabled = draft != null || mealDraft?.value != null,
+                    onBack = {
+                        if (draft != null) state.cancelDraft() else mealState?.cancelDraft()
+                    },
+                )
+                StoolLogScreen(state, selectedLanguage == AppLanguage.German, mealState)
             }
         }
     }

@@ -1,13 +1,21 @@
 package de.gutlog.app.data.local
 
 import androidx.room.ConstructedBy
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 
 @Database(
-    entities = [StoolEntryEntity::class, MealEntryEntity::class, StoolDefaultEntity::class],
-    version = 2,
+    entities = [
+        StoolEntryEntity::class,
+        MealEntryEntity::class,
+        StoolDefaultEntity::class,
+        MealFoodEntity::class,
+        FoodCatalogEntity::class,
+    ],
+    version = 3,
+    autoMigrations = [AutoMigration(from = 2, to = 3)],
 )
 @ConstructedBy(DiaryDatabaseConstructor::class)
 abstract class DiaryDatabase : RoomDatabase() {

@@ -46,22 +46,32 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import de.gutlog.shared.generated.resources.*
+import de.gutlog.app.domain.MealEntry
+import de.gutlog.app.domain.BuiltInFoodCatalog
+import de.gutlog.app.domain.PortionSize
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun StoolLogScreen(state: StoolLogState, german: Boolean) {
+fun StoolLogScreen(state: StoolLogState, german: Boolean, mealState: MealLogState? = null) {
     val content by state.content.collectAsState()
     val draft by state.draft.collectAsState()
     val saving by state.saving.collectAsState()
     val saveError by state.saveError.collectAsState()
     val timeError by state.timeError.collectAsState()
-    val currentDraft = draft
-    if (currentDraft != null) {
-        StoolEntryForm(currentDraft, saving, saveError, timeError, state)
+    if (draft != null) {
+        StoolEntryForm(requireNotNull(draft), saving, saveError, timeError, state)
+    } else if (mealState != null) {
+        val mealContent by mealState.content.collectAsState()
+        val mealDraft by mealState.draft.collectAsState()
+        if (mealDraft != null) {
+            MealEntryForm(requireNotNull(mealDraft), mealState, german)
+        } else {
+            StoolList(content, german, state::openDraft, state::reload, mealState, mealContent)
+        }
     } else {
-        StoolList(content, german, state::openDraft, state::reload)
+        StoolList(content, german, state::openDraft, state::reload, null, null)
     }
 }
 
@@ -71,6 +81,8 @@ private fun StoolList(
     german: Boolean,
     openDraft: () -> Unit,
     retry: () -> Unit,
+    mealState: MealLogState?,
+    mealContent: MealLogContent?,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
@@ -117,10 +129,28 @@ private fun StoolList(
                     }
                 }
             }
-            item {
-                Text(stringResource(Res.string.food_diary_title))
-                Text(stringResource(Res.string.food_diary_description))
-                Spacer(Modifier.height(96.dp))
+            if (mealState == null) {
+                item {
+                    Text(stringResource(Res.string.food_diary_title))
+                    Text(stringResource(Res.string.food_diary_description))
+                    Spacer(Modifier.height(96.dp))
+                }
+            } else {
+                item { Text(stringResource(Res.string.food_diary_title)) }
+                when (mealContent) {
+                    null, MealLogContent.Loading -> item { Text(stringResource(Res.string.loading_meals)) }
+                    MealLogContent.Error -> item {
+                        Text(stringResource(Res.string.meal_load_error))
+                        TextButton(onClick = mealState::reload) { Text(stringResource(Res.string.retry)) }
+                    }
+                    is MealLogContent.Loaded -> {
+                        if (mealContent.entries.isEmpty()) item { Text(stringResource(Res.string.empty_meals)) }
+                        items(mealContent.entries, key = { "meal-${it.id}" }) { entry ->
+                            MealEntryCard(entry, german)
+                        }
+                    }
+                }
+                item { Spacer(Modifier.height(96.dp)) }
             }
         }
         Box(Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
@@ -133,8 +163,17 @@ private fun StoolList(
                 DropdownMenuItem(onClick = { menuOpen = false; openDraft() }, enabled = content is StoolLogContent.Loaded) {
                     Text(stringResource(Res.string.add_stool))
                 }
-                DropdownMenuItem(onClick = {}, enabled = false) {
-                    Text("${stringResource(Res.string.add_food)} — ${stringResource(Res.string.coming_soon)}")
+                DropdownMenuItem(
+                    onClick = { menuOpen = false; mealState?.openDraft() },
+                    enabled = mealState != null && mealContent is MealLogContent.Loaded,
+                ) {
+                    Text(
+                        if (mealState == null) {
+                            "${stringResource(Res.string.add_food)} — ${stringResource(Res.string.coming_soon)}"
+                        } else {
+                            stringResource(Res.string.add_food)
+                        },
+                    )
                 }
                 DropdownMenuItem(onClick = {}, enabled = false) {
                     Text("${stringResource(Res.string.add_pain)} — ${stringResource(Res.string.coming_soon)}")
@@ -143,6 +182,181 @@ private fun StoolList(
         }
     }
 }
+
+@Composable
+private fun MealEntryCard(entry: MealEntry, german: Boolean) {
+    Column(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(12.dp)).padding(16.dp)) {
+        Text(formatEntryTime(entry.occurredAtEpochMillis, TimeZone.currentSystemDefault(), german))
+        entry.foods.forEach { food ->
+            val name = BuiltInFoodCatalog.items
+                .firstOrNull { it.id == food.catalogFoodId }
+                ?.displayName(german)
+                ?: food.name
+            Text("$name — ${portionLabel(food.effectivePortion(entry.portionSize))}")
+        }
+        entry.note?.let { Text(it) }
+    }
+}
+
+@Composable
+private fun MealEntryForm(draft: MealDraft, state: MealLogState, german: Boolean) {
+    val initial = requireNotNull(draft.localDateTime)
+    var date by remember { mutableStateOf(initial.date.toString()) }
+    var time by remember { mutableStateOf("${initial.hour.toString().padStart(2, '0')}:${initial.minute.toString().padStart(2, '0')}") }
+    var query by remember { mutableStateOf("") }
+    var invalid by remember { mutableStateOf(false) }
+    val results by state.searchResults.collectAsState()
+    val searching by state.searching.collectAsState()
+    val searchError by state.searchError.collectAsState()
+    val saving by state.saving.collectAsState()
+    val saveError by state.saveError.collectAsState()
+    val timeError by state.timeError.collectAsState()
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(stringResource(Res.string.meal_entry_title))
+        OutlinedTextField(
+            date,
+            { date = it; invalid = false },
+            label = { Text(stringResource(Res.string.date_label)) },
+            enabled = !saving,
+        )
+        OutlinedTextField(
+            time,
+            { time = it; invalid = false },
+            label = { Text(stringResource(Res.string.time_label)) },
+            enabled = !saving,
+        )
+        if (invalid || timeError == EntryTimeError.INVALID_OR_AMBIGUOUS) {
+            Text(stringResource(Res.string.invalid_time), color = Color.Red)
+        }
+        if (timeError == EntryTimeError.FUTURE) Text(stringResource(Res.string.future_time), color = Color.Red)
+        OutlinedTextField(
+            query,
+            {
+                query = it
+                state.searchFoods(it)
+            },
+            label = { Text(stringResource(Res.string.food_search_label)) },
+            enabled = !saving,
+            modifier = Modifier.testTag("food-search"),
+        )
+        if (searching) Text(stringResource(Res.string.loading))
+        if (searchError) Text(stringResource(Res.string.food_search_error), color = Color.Red)
+        results.forEach { food ->
+            TextButton(
+                onClick = { state.addFood(food, german) },
+                enabled = !saving,
+                modifier = Modifier.fillMaxWidth().testTag("catalog-food-${food.id}"),
+            ) {
+                Text(food.displayName(german))
+            }
+        }
+        if (query.isNotBlank() && results.none { it.matchesExactly(query) }) {
+            TextButton(
+                onClick = { state.addCustomFood(query) },
+                enabled = !saving,
+                modifier = Modifier.testTag("add-custom-food"),
+            ) {
+                Text("${stringResource(Res.string.add_custom_food)}: ${query.trim()}")
+            }
+        }
+        Text(stringResource(Res.string.selected_foods))
+        draft.foods.forEach { food ->
+            Column(Modifier.fillMaxWidth().testTag("meal-food-${food.id}")) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(food.name, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { state.removeFood(food.id) }, enabled = !saving) {
+                        Text(stringResource(Res.string.remove_food))
+                    }
+                }
+                Text(stringResource(Res.string.food_portion, food.name))
+                PortionSelector(
+                    selected = food.effectivePortion(draft.portionSize),
+                    enabled = !saving,
+                    onSelect = { state.setFoodPortion(food.id, it) },
+                    tagPrefix = "food-portion-${food.id}",
+                )
+                TextButton(
+                    onClick = { state.setFoodPortion(food.id, null) },
+                    enabled = !saving && food.portionOverride != null,
+                ) {
+                    Text(stringResource(Res.string.use_meal_portion))
+                }
+            }
+        }
+        Text(stringResource(Res.string.meal_portion))
+        PortionSelector(
+            selected = draft.portionSize,
+            enabled = !saving,
+            onSelect = state::setPortionSize,
+            tagPrefix = "meal-portion",
+        )
+        if (saveError) Text(stringResource(Res.string.save_error), color = Color.Red)
+        Row {
+            TextButton(
+                onClick = state::cancelDraft,
+                enabled = !saving,
+                modifier = Modifier.testTag("cancel-meal"),
+            ) {
+                Text(stringResource(Res.string.cancel))
+            }
+            Button(
+                enabled = !saving && draft.foods.isNotEmpty(),
+                onClick = {
+                    val parsed = try {
+                        if (!Regex("""\d{4}-\d{2}-\d{2}""").matches(date) || !Regex("""\d{2}:\d{2}""").matches(time)) null
+                        else LocalDateTime.parse("${date}T$time:00")
+                    } catch (error: IllegalArgumentException) {
+                        null
+                    }
+                    if (parsed == null) invalid = true
+                    else {
+                        invalid = false
+                        state.setDateTime(parsed)
+                        state.saveDraft()
+                    }
+                },
+            ) {
+                Text(stringResource(Res.string.save))
+            }
+        }
+    }
+}
+
+@Composable
+private fun PortionSelector(
+    selected: PortionSize?,
+    enabled: Boolean,
+    onSelect: (PortionSize) -> Unit,
+    tagPrefix: String,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        PortionSize.entries.forEach { size ->
+            val label = portionLabel(size)
+            Row(
+                modifier = Modifier
+                    .selectable(selected == size, enabled = enabled, role = Role.RadioButton) { onSelect(size) }
+                    .testTag("$tagPrefix-${size.name}"),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(selected == size, onClick = null, enabled = enabled)
+                Text(label)
+            }
+        }
+    }
+}
+
+@Composable
+private fun portionLabel(size: PortionSize): String = stringResource(
+    when (size) {
+        PortionSize.SMALL -> Res.string.portion_small
+        PortionSize.MEDIUM -> Res.string.portion_medium
+        PortionSize.LARGE -> Res.string.portion_large
+    },
+)
 
 @Composable
 private fun StoolEntryForm(
