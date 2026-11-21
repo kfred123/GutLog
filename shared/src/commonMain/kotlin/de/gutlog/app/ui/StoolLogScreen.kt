@@ -26,6 +26,7 @@ import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.RadioButton
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
@@ -40,11 +41,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import de.gutlog.shared.generated.resources.*
 import de.gutlog.app.domain.MealEntry
 import de.gutlog.app.domain.BuiltInFoodCatalog
@@ -203,11 +207,8 @@ private fun MealEntryForm(draft: MealDraft, state: MealLogState, german: Boolean
     val initial = requireNotNull(draft.localDateTime)
     var date by remember { mutableStateOf(initial.date.toString()) }
     var time by remember { mutableStateOf("${initial.hour.toString().padStart(2, '0')}:${initial.minute.toString().padStart(2, '0')}") }
-    var query by remember { mutableStateOf("") }
     var invalid by remember { mutableStateOf(false) }
-    val results by state.searchResults.collectAsState()
-    val searching by state.searching.collectAsState()
-    val searchError by state.searchError.collectAsState()
+    val foodSearchOpen by state.foodSearchOpen.collectAsState()
     val saving by state.saving.collectAsState()
     val saveError by state.saveError.collectAsState()
     val timeError by state.timeError.collectAsState()
@@ -233,37 +234,14 @@ private fun MealEntryForm(draft: MealDraft, state: MealLogState, german: Boolean
             Text(stringResource(Res.string.invalid_time), color = Color.Red)
         }
         if (timeError == EntryTimeError.FUTURE) Text(stringResource(Res.string.future_time), color = Color.Red)
-        OutlinedTextField(
-            query,
-            {
-                query = it
-                state.searchFoods(it)
-            },
-            label = { Text(stringResource(Res.string.food_search_label)) },
-            enabled = !saving,
-            modifier = Modifier.testTag("food-search"),
-        )
-        if (searching) Text(stringResource(Res.string.loading))
-        if (searchError) Text(stringResource(Res.string.food_search_error), color = Color.Red)
-        results.forEach { food ->
-            TextButton(
-                onClick = { state.addFood(food, german) },
-                enabled = !saving,
-                modifier = Modifier.fillMaxWidth().testTag("catalog-food-${food.id}"),
-            ) {
-                Text(food.displayName(german))
-            }
-        }
-        if (query.isNotBlank() && results.none { it.matchesExactly(query) }) {
-            TextButton(
-                onClick = { state.addCustomFood(query) },
-                enabled = !saving,
-                modifier = Modifier.testTag("add-custom-food"),
-            ) {
-                Text("${stringResource(Res.string.add_custom_food)}: ${query.trim()}")
-            }
-        }
         Text(stringResource(Res.string.selected_foods))
+        TextButton(
+            onClick = state::openFoodSearch,
+            enabled = !saving,
+            modifier = Modifier.testTag("add-food"),
+        ) {
+            Text(stringResource(Res.string.add_food_to_meal))
+        }
         draft.foods.forEach { food ->
             Column(Modifier.fillMaxWidth().testTag("meal-food-${food.id}")) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -321,6 +299,70 @@ private fun MealEntryForm(draft: MealDraft, state: MealLogState, german: Boolean
                 },
             ) {
                 Text(stringResource(Res.string.save))
+            }
+        }
+    }
+    if (foodSearchOpen) {
+        FoodSearchOverlay(state, german)
+    }
+}
+
+@Composable
+private fun FoodSearchOverlay(state: MealLogState, german: Boolean) {
+    var query by remember { mutableStateOf("") }
+    val results by state.searchResults.collectAsState()
+    val searching by state.searching.collectAsState()
+    val searchError by state.searchError.collectAsState()
+    val focusManager = LocalFocusManager.current
+    val dismiss = {
+        focusManager.clearFocus()
+        state.closeFoodSearch()
+    }
+
+    Dialog(onDismissRequest = dismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(Modifier.fillMaxSize()) {
+            Column(
+                Modifier.fillMaxSize().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(Res.string.food_search_title), modifier = Modifier.weight(1f))
+                    TextButton(onClick = dismiss, modifier = Modifier.testTag("close-food-search")) {
+                        Text(stringResource(Res.string.close_food_search))
+                    }
+                }
+                OutlinedTextField(
+                    query,
+                    {
+                        query = it
+                        state.searchFoods(it)
+                    },
+                    label = { Text(stringResource(Res.string.food_search_label)) },
+                    modifier = Modifier.fillMaxWidth().testTag("food-search"),
+                )
+                Column(
+                    Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (searching) Text(stringResource(Res.string.loading))
+                    if (searchError) Text(stringResource(Res.string.food_search_error), color = Color.Red)
+                    results.forEach { food ->
+                        TextButton(
+                            onClick = { focusManager.clearFocus(); state.addFood(food, german) },
+                            modifier = Modifier.fillMaxWidth().testTag("catalog-food-${food.id}"),
+                        ) {
+                            Text(food.displayName(german))
+                        }
+                    }
+                    if (!searching && query.isNotBlank() && results.none { it.matchesExactly(query) }) {
+                        TextButton(
+                            onClick = { focusManager.clearFocus(); state.addCustomFood(query) },
+                            modifier = Modifier.testTag("add-custom-food"),
+                        ) {
+                            Text("${stringResource(Res.string.add_custom_food)}: ${query.trim()}")
+                        }
+                    }
+                }
             }
         }
     }

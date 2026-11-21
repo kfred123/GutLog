@@ -1,6 +1,7 @@
 package de.gutlog.app
 
 import androidx.activity.ComponentActivity
+import android.view.KeyEvent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.test.platform.app.InstrumentationRegistry
 import de.gutlog.app.domain.BuiltInFoodCatalog
 import de.gutlog.app.domain.FoodCatalogItem
 import de.gutlog.app.domain.MealEntry
@@ -88,18 +90,24 @@ class FoodDiaryUiTest {
         compose.onNodeWithContentDescription("Add entry").performClick()
         compose.onNodeWithText("Add food").performClick()
         compose.onNodeWithText("Save").assertIsNotEnabled()
-        compose.onNodeWithTag("food-search").performTextInput("tomato")
-        compose.onNodeWithText("Tomato").performClick()
-        compose.onNodeWithTag("food-search").performTextClearance()
-        compose.onNodeWithTag("food-search").performTextInput("Oat milk")
-        compose.onNodeWithText("Add as custom food: Oat milk").performClick()
+        compose.onNodeWithTag("food-search").assertDoesNotExist()
         compose.onNodeWithText("Date (YYYY-MM-DD)").performTextClearance()
         compose.onNodeWithText("Date (YYYY-MM-DD)").performTextInput("1969-12-30")
         compose.onNodeWithText("Time (HH:MM)").performTextClearance()
         compose.onNodeWithText("Time (HH:MM)").performTextInput("12:00")
-        compose.onNodeWithTag("meal-portion-LARGE").performClick()
-        compose.onNodeWithTag("food-portion-food-1-SMALL").performClick()
-        compose.onNodeWithText("Save").performClick()
+        compose.onNodeWithTag("add-food").performClick()
+        compose.onNodeWithTag("food-search").performTextInput("tomato")
+        compose.onNodeWithText("Tomato").performClick()
+        compose.onNodeWithTag("food-search").assertDoesNotExist()
+        compose.onNodeWithText("1969-12-30").assertIsDisplayed()
+        compose.onNodeWithText("12:00").assertIsDisplayed()
+        compose.onNodeWithTag("add-food").performScrollTo().performClick()
+        compose.onNodeWithTag("food-search").performTextInput("Oat milk")
+        compose.onNodeWithText("Add as custom food: Oat milk").performClick()
+        compose.onNodeWithTag("food-search").assertDoesNotExist()
+        compose.onNodeWithTag("meal-portion-LARGE").performScrollTo().performClick()
+        compose.onNodeWithTag("food-portion-food-1-SMALL").performScrollTo().performClick()
+        compose.onNodeWithText("Save").performScrollTo().performClick()
 
         compose.onNodeWithTag("stool-log").performScrollToNode(hasText("Tomato — Small"))
         compose.onNodeWithText("Tomato — Small").assertIsDisplayed()
@@ -112,11 +120,13 @@ class FoodDiaryUiTest {
         show(repository)
         compose.onNodeWithContentDescription("Add entry").performClick()
         compose.onNodeWithText("Add food").performClick()
+        compose.onNodeWithTag("add-food").performClick()
         compose.onNodeWithTag("food-search").performTextInput("My own food")
         compose.onNodeWithText("Add as custom food: My own food").performClick()
-        compose.onNodeWithTag("cancel-meal").performClick()
+        compose.onNodeWithTag("cancel-meal").performScrollTo().performClick()
         compose.onNodeWithContentDescription("Add entry").performClick()
         compose.onNodeWithText("Add food").performClick()
+        compose.onNodeWithTag("add-food").performClick()
         compose.onNodeWithTag("food-search").performTextInput("My own food")
         compose.onNodeWithText("Add as custom food: My own food").assertIsDisplayed()
         assert(repository.entries.value.isEmpty())
@@ -128,10 +138,33 @@ class FoodDiaryUiTest {
         show(MealRepository(), german = true)
         compose.onNodeWithContentDescription("Eintrag hinzufügen").performClick()
         compose.onNodeWithText("Essen eintragen").performClick()
+        compose.onNodeWithText("Hinzufügen").performClick()
         compose.onNodeWithText("Lebensmittel suchen").assertIsDisplayed()
         compose.onNodeWithTag("food-search").performTextInput("apple")
         compose.onNodeWithText("Apfel").performClick()
         compose.onNodeWithText("Portionsgröße der Mahlzeit").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("meal-portion-LARGE").assertIsDisplayed()
+    }
+
+    @Test
+    fun closingAndBackingOutOfSearchPreservesMealAndResetsQuery() {
+        show(MealRepository())
+        compose.onNodeWithContentDescription("Add entry").performClick()
+        compose.onNodeWithText("Add food").performClick()
+        compose.onNodeWithTag("add-food").performClick()
+        compose.onNodeWithTag("food-search").performTextInput("tomato")
+        compose.onNodeWithText("Tomato").performClick()
+        compose.onNodeWithTag("add-food").performScrollTo().performClick()
+        compose.onNodeWithTag("catalog-food-builtin-tomato").assertIsDisplayed()
+        compose.onNodeWithTag("food-search").performTextInput("apple")
+        compose.onNodeWithTag("close-food-search").performClick()
+        compose.onNodeWithTag("food-search").assertDoesNotExist()
+        compose.onNodeWithTag("meal-food-food-1").assertIsDisplayed()
+        compose.onNodeWithTag("add-food").performScrollTo().performClick()
+        compose.onNodeWithTag("catalog-food-builtin-tomato").assertIsDisplayed()
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+        compose.waitForIdle()
+        compose.onNodeWithTag("food-search").assertDoesNotExist()
+        compose.onNodeWithTag("meal-food-food-1").assertIsDisplayed()
     }
 }

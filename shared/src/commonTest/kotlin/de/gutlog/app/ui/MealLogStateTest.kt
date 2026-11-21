@@ -5,6 +5,7 @@ import de.gutlog.app.domain.FoodCatalogItem
 import de.gutlog.app.domain.MealEntry
 import de.gutlog.app.domain.MealEntryRepository
 import de.gutlog.app.domain.PortionSize
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,13 +26,18 @@ class MealLogStateTest {
         val customFoods = mutableListOf<FoodCatalogItem>()
         var saved: MealEntry? = null
         var failSave = false
+        var failSearch = false
+        var saveGate: CompletableDeferred<Unit>? = null
 
         override fun observeAll(): Flow<List<MealEntry>> = entries
 
-        override suspend fun searchFoods(query: String): List<FoodCatalogItem> =
-            BuiltInFoodCatalog.search(query, customFoods)
+        override suspend fun searchFoods(query: String): List<FoodCatalogItem> {
+            if (failSearch) error("search failed")
+            return BuiltInFoodCatalog.search(query, customFoods)
+        }
 
         override suspend fun save(entry: MealEntry) {
+            saveGate?.await()
             if (failSave) error("save failed")
             saved = entry
             customFoods += entry.foods.filter { it.isCustom }.map {
@@ -42,6 +48,83 @@ class MealLogStateTest {
 
         override suspend fun delete(id: String) {
             entries.value = entries.value.filterNot { it.id == id }
+        }
+    }
+
+    @Test
+    fun openingFoodSearchResetsResultsAndErrorsAndIsUnavailableWithoutDraftOrWhileSaving() {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        try {
+            val repository = FakeRepository()
+            val state = MealLogState(repository, scope, { 0 }, { "id" }, { TimeZone.UTC })
+            state.openFoodSearch()
+            assertFalse(state.foodSearchOpen.value)
+
+            state.openDraft()
+            state.openFoodSearch()
+            assertTrue(state.foodSearchOpen.value)
+            assertEquals(BuiltInFoodCatalog.search("", emptyList()), state.searchResults.value)
+            state.searchFoods("tomato")
+            assertEquals(1, state.searchResults.value.size)
+            state.closeFoodSearch()
+            repository.failSearch = true
+            state.openFoodSearch()
+            assertTrue(state.searchError.value)
+            state.closeFoodSearch()
+            repository.failSearch = false
+            state.openFoodSearch()
+            assertFalse(state.searchError.value)
+            assertEquals(BuiltInFoodCatalog.search("", emptyList()), state.searchResults.value)
+
+            state.closeFoodSearch()
+            state.addCustomFood("Apple")
+            repository.saveGate = CompletableDeferred()
+            state.saveDraft()
+            assertTrue(state.saving.value)
+            state.openFoodSearch()
+            assertFalse(state.foodSearchOpen.value)
+            repository.saveGate?.complete(Unit)
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun foodSearchClosesAfterAddingOrDiscardingWithoutChangingTheDraft() {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        try {
+            var nextId = 0
+            val state = MealLogState(FakeRepository(), scope, { 0 }, { "id-${nextId++}" }, { TimeZone.UTC })
+            state.openDraft()
+            val original = state.draft.value
+            state.openFoodSearch()
+            state.closeFoodSearch()
+            assertEquals(original, state.draft.value)
+
+            state.openFoodSearch()
+            state.addFood(state.searchResults.value.first(), german = false)
+            assertFalse(state.foodSearchOpen.value)
+            assertEquals(1, state.draft.value?.foods?.size)
+
+            state.openFoodSearch()
+            state.addCustomFood(" Oat milk ")
+            assertFalse(state.foodSearchOpen.value)
+            assertEquals(2, state.draft.value?.foods?.size)
+            assertEquals("Oat milk", state.draft.value?.foods?.last()?.name)
+
+            state.openFoodSearch()
+            state.cancelDraft()
+            assertFalse(state.foodSearchOpen.value)
+            assertNull(state.draft.value)
+
+            state.openDraft()
+            state.addCustomFood("Apple")
+            state.openFoodSearch()
+            state.saveDraft()
+            assertFalse(state.foodSearchOpen.value)
+            assertNull(state.draft.value)
+        } finally {
+            scope.cancel()
         }
     }
 
