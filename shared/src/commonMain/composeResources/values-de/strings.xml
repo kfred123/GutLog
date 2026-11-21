@@ -5,6 +5,9 @@
     <string name="food_diary_title">Ernährungstagebuch</string>
     <string name="food_diary_description">Mahlzeiten und Notizen werden hier festgehalten.</string>
     <string name="meal_entry_title">Mahlzeit eintragen</string>
+    <string name="add_food_to_meal">Hinzufügen</string>
+    <string name="food_search_title">Lebensmittel hinzufügen</string>
+    <string name="close_food_search">Schließen</string>
     <string name="food_search_label">Lebensmittel suchen</string>
     <string name="food_search_error">Lebensmittel konnten nicht gesucht werden. Bitte erneut versuchen.</string>
     <string name="add_custom_food">Als eigenes Lebensmittel hinzufügen</string>

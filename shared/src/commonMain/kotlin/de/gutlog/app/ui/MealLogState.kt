@@ -40,6 +40,8 @@ class MealLogState(
     val content: StateFlow<MealLogContent> = mutableContent.asStateFlow()
     private val mutableDraft = MutableStateFlow<MealDraft?>(null)
     val draft: StateFlow<MealDraft?> = mutableDraft.asStateFlow()
+    private val mutableFoodSearchOpen = MutableStateFlow(false)
+    val foodSearchOpen: StateFlow<Boolean> = mutableFoodSearchOpen.asStateFlow()
     private val mutableSearchResults = MutableStateFlow<List<FoodCatalogItem>>(emptyList())
     val searchResults: StateFlow<List<FoodCatalogItem>> = mutableSearchResults.asStateFlow()
     private val mutableSearching = MutableStateFlow(false)
@@ -89,10 +91,21 @@ class MealLogState(
         }
     }
 
+    fun openFoodSearch() {
+        if (draft.value == null || saving.value || foodSearchOpen.value) return
+        mutableFoodSearchOpen.value = true
+        searchFoods("")
+    }
+
+    fun closeFoodSearch() {
+        mutableFoodSearchOpen.value = false
+    }
+
     fun searchFoods(query: String) {
         searchJob?.cancel()
         val generation = ++searchGeneration
         mutableSearchError.value = false
+        mutableSearchResults.value = emptyList()
         mutableSearching.value = true
         searchJob = scope.launch {
             try {
@@ -122,6 +135,7 @@ class MealLogState(
             ),
         )
         mutableSaveError.value = false
+        closeFoodSearch()
     }
 
     fun addCustomFood(name: String) {
@@ -135,6 +149,7 @@ class MealLogState(
             ),
         )
         mutableSaveError.value = false
+        closeFoodSearch()
     }
 
     fun removeFood(id: String) {
@@ -170,6 +185,7 @@ class MealLogState(
 
     fun cancelDraft() {
         if (!saving.value) {
+            closeFoodSearch()
             mutableDraft.value = null
             mutableSaveError.value = false
             mutableTimeError.value = null
@@ -199,6 +215,7 @@ class MealLogState(
         scope.launch {
             try {
                 repository.save(entry)
+                closeFoodSearch()
                 mutableDraft.value = null
                 mutableSearchResults.value = emptyList()
             } catch (error: CancellationException) {

@@ -5,6 +5,9 @@
     <string name="food_diary_title">Food diary</string>
     <string name="food_diary_description">Record meals and notes here.</string>
     <string name="meal_entry_title">Add meal</string>
+    <string name="add_food_to_meal">Add</string>
+    <string name="food_search_title">Add food</string>
+    <string name="close_food_search">Close</string>
     <string name="food_search_label">Search foods</string>
     <string name="food_search_error">Could not search foods. Please try again.</string>
     <string name="add_custom_food">Add as custom food</string>
